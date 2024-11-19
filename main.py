@@ -8,7 +8,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 import time
 from credentials import LINKEDIN_EMAIL, LINKEDIN_PASSWORD
 
-driver = webdriver.Edge()
+driver = webdriver.Firefox()
 driver.get("https://www.linkedin.com/login")
 
 username = driver.find_element(By.ID, "username")
@@ -24,7 +24,9 @@ time.sleep(20)
 
 driver.get("https://www.linkedin.com/jobs")
 
-time.sleep(5)
+WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "jobs-search-box__text-input"))
+        )
 
 search_box = driver.find_element(By.CLASS_NAME, "jobs-search-box__text-input")
 search_box.send_keys("Data")
@@ -40,7 +42,7 @@ job_cards = driver.find_elements(By.XPATH, '//li[@data-occludable-job-id]')
 
 
 id_list = []
-
+#Get Job Ids
 for cards in job_cards:
      try:
          id = cards.get_attribute("data-occludable-job-id")
@@ -51,7 +53,16 @@ for cards in job_cards:
      except Exception as e:
          print(f"Error, {e}")
         
-        
+
+
+job_data = {
+    "title": None,
+    "company": None,
+    "date_posted": None,
+    "job_desc": None,
+}
+
+#Get Job Desc
 for ids in id_list:
     job_search = driver.get(f"https://www.linkedin.com/jobs/search/?currentJobId={id}&geoId=106808692&keywords=data&origin=JOBS_HOME_SEARCH_BUTTON&refresh=true")
     
@@ -65,11 +76,20 @@ for ids in id_list:
             desc = job_desc.find_elements(By.TAG_NAME, "span")
             print(len(desc))
             
+            a = []
             for descs in desc:
                 print(descs.text)
+                a.append(descs.text)
+            
+            job_data["job_desc"] = " ".join(a)    
+                
     
     except Exception as e:
         print(f"Error, {e}")
         
     break
+
+
 driver.quit()
+
+print(job_data)
